@@ -1,13 +1,8 @@
 #matplotlib.use("Agg")  # Disable comment when no output should be shown (for running on servers without graphical interface)
 
 import datetime
-import multiprocessing as mp
 import random
-
 import pandas as pd
-from joblib import Parallel, delayed
-
-import Bohmer.LikelihoodGraph as lg
 
 activity_configurations = set()
 
