@@ -32,6 +32,9 @@ def are_independent(data, alpha=0.05, method='mi_test'):
         return False
 
 def mutual_information(data):
+    """
+    This can be used for multiple FDs
+    """
     cols = len(data.columns)
     data = data.values
     if cols == 1:

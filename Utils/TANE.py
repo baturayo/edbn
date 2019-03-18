@@ -1,0 +1,104 @@
+import os
+import re
+
+
+def write_sample_data(data, sample_size):
+    """
+    Take a sample data from the train set to mine FDs
+    :param data: Pandas DF object
+    :param sample_size: Number of rows to take the sample
+    """
+    sample_data = data.sample(sample_size)
+    sample_data.to_csv('../tane-1.0/original/sample.orig', sep=',', header=False, index=False)
+
+
+def write_dat_file():
+    """
+    To run the tane API the data frame needs to be converted to .dat file
+    :return:
+    """
+    command1 = 'cd ../tane-1.0/original/'
+    command2 = '../bin/select.perl ../descriptions/data.dsc'
+    command = command1 + '&&' + command2
+    print(command)
+    os.system(command)
+
+
+def import_fds(attribute_mappings):
+    fd_path = '../tane-1.0/output/'
+    with open(fd_path + 'sample.log', 'r') as f:
+        unstructured_fds = f.read()
+        multi_parent_fds = []
+        mappings = []
+        regex = '[0-9 ]+-> [0-9]+'
+        fds = re.findall(regex, unstructured_fds)
+
+        for fd in fds:
+            fd = fd.split(' ')
+            fd.remove('->')
+            parents = []
+
+            # Not that for an FD a, c -> b  a and c are parents and b is a child
+            # iterate over parents in an FD to map it with the attribute name
+            # If the fd has multiple parents
+            if len(fd) > 2:
+                for parent in fd[:-1]:
+                    parents.append(attribute_mappings[parent])
+                child = attribute_mappings[fd[-1]]
+                multi_parent_fds.append((parents, child))
+
+            # If the fd has single parent
+            else:
+                fd_tuple = (attribute_mappings[fd[0]], attribute_mappings[fd[1]])
+                mappings.append(fd_tuple)
+
+    return mappings, multi_parent_fds
+
+
+def map_attributes(attribute_names):
+    """
+    Map integers to attribute names starting from 1 because FDs are shown as integers and they need to be replaced by
+    the attribute names for the readibility
+    :param attribute_names: List having attribute names
+    """
+    attribute_mappings = {}
+    counter = 1
+    for attribute in attribute_names:
+        attribute_mappings[str(counter)] = attribute
+        counter += 1
+    return attribute_mappings
+
+
+def run_tane(data, sample_size, n_levels, n_attributes, threshold):
+    write_sample_data(data, sample_size)
+    write_dat_file()
+    dat_file_path = '../tane-1.0/data/data.dat'
+    fd_raw_output_path = '../tane-1.0/output/sample.log'
+    command_tane = '../tane-1.0/bin/taneg3 {} {} {} {} {}&> {}'.format(str(n_levels),
+                                                                       str(sample_size),
+                                                                       str(n_attributes),
+                                                                       dat_file_path,
+                                                                       str(threshold),
+                                                                       fd_raw_output_path)
+    print(command_tane)
+    os.system(command_tane)
+    attribute_mapping = map_attributes(data.columns)
+    return import_fds(attribute_mapping)
+
+
+# attrs = ['Case_ID', 'Activity', 'Resource', 'Complete_Timestamp',
+#        'case_IDofConceptCase', 'case_Includes_subCases',
+#        'case_Responsible_actor', 'case_SUMleges', 'case_caseProcedure',
+#        'case_caseStatus', 'case_case_type', 'case_landRegisterID',
+#        'case_last_phase', 'case_parts', 'case_requestComplete',
+#        'case_termName', 'action_code', 'activityNameEN', 'activityNameNL',
+#        'concept_name', 'dateStop', 'lifecycle_transition',
+#        'monitoringResource', 'question', 'Weekday']
+#
+# attribute_mappings = map_attributes(attrs)
+# structured_fds = import_fds(attribute_mappings)
+# print(structured_fds)
+
+
+
+

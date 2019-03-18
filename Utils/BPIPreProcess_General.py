@@ -90,7 +90,7 @@ def introduce_anomaly(trace, ignore_attrs = None, anom_attributes = None, single
         anomaly_types = []
         # Temporal anomaly or attribute anomaly?
         type = random.randint(1, 10)
-        if type <= 3:
+        if type <= -3:
             trace = duration_anomaly(trace, time_attr)
             anomaly_types.append("alter_duration")
         else:
@@ -187,8 +187,8 @@ if __name__ == "__main__":
         train_files.append("../Data/bpic15_%i_train.csv" % (i))
         test_files.append("../Data/bpic15_%i_test.csv" % (i))
 
-    #for i in range(1,6):
-    #    sort_datafile("../Data/BPIC15_%i_sorted.csv" % i, "../Data/BPIC15_%i_sorted_new.csv" % i, "Complete Timestamp")
+    for i in range(1,6):
+       sort_datafile("../Data/BPIC15_%i_sorted.csv" % i, "../Data/BPIC15_%i_sorted_new.csv" % i, "Complete Timestamp")
 
     for i in range(len(files)):
         print("PREPROCESS: Creating", files[i])

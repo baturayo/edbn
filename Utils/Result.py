@@ -11,7 +11,7 @@ class Result:
 
 class Trace_result:
 
-    def __init__(self, id, anomaly = False, time = None):
+    def __init__(self, id, anomaly=False, time=None):
         self.events = []
         self.id = id
         self.time = time
@@ -52,8 +52,8 @@ class Trace_result:
     def get_first_event_index(self):
         return self.events[0].id
 
-class Event_result:
 
+class Event_result:
     def __init__(self, id = None):
         self.attributes = {}
         self.id = id

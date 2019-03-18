@@ -11,18 +11,18 @@ def train(data):
 
 def test(test_data, output_file, model, label, normal_val, train_data):
     """
-    training_scores = model.test_data(train_data)
-    attribute_scores = {}
-    attrs = training_scores[0].attributes
-    for attr in attrs:
-        attribute_scores[attr] = []
-    for score in training_scores:
-        attr_scores = score.get_attribute_scores()
+        training_scores = model.test_data(train_data)
+        attribute_scores = {}
+        attrs = training_scores[0].attributes
         for attr in attrs:
-            attribute_scores[attr].append(attr_scores[attr])
+            attribute_scores[attr] = []
+        for score in training_scores:
+            attr_scores = score.get_attribute_scores()
+            for attr in attrs:
+                attribute_scores[attr].append(attr_scores[attr])
 
-    for attr in attribute_scores:
-        print(attribute_scores[attr])
+        for attr in attribute_scores:
+            print(attribute_scores[attr])
     """
 
     anoms = model.test_data(test_data)

@@ -6,8 +6,8 @@ from joblib import Parallel, delayed
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator
-
 import Result
+
 
 def calculate(trace):
     case = trace[0]
@@ -18,11 +18,11 @@ def calculate(trace):
         result.add_event(e_result)
     return result
 
+
 class extendedDynamicBayesianNetwork():
     """
     Class for representing an extended Dynamic Bayesian Network (eDBN)
     """
-
     def __init__(self, num_attrs, k, trace_attr):
         self.variables = {}
         self.current_variables = []
@@ -31,7 +31,6 @@ class extendedDynamicBayesianNetwork():
         self.k = k
         self.trace_attr = trace_attr
         self.durations = None
-
 
     def add_discrete_variable(self, name, new_values, empty_val):
         print("ADD Discrete:", name)
@@ -47,6 +46,15 @@ class extendedDynamicBayesianNetwork():
         if m is None:
             self.current_variables.append(name)
 
+    def add_multiple_parents_variable(self, parent_names, variable_name):
+        discrete_var = self.get_variable(variable_name)
+        multiple_parent_variables = Multiple_Parent_Variables(discrete_var)
+        # Append it into child because one child can have multiple parents such as
+        # a,b -> c
+        # d,e -> c
+        # for variable c it has both {a,b} and {d,e} parents
+        multiple_parent_variables.add_mapping(parent_names)
+
     def remove_variable(self, name):
         del self.variables[name]
 
@@ -60,6 +68,14 @@ class extendedDynamicBayesianNetwork():
 
     def get_variable(self, attr_name):
         return self.variables[attr_name]
+
+    def check_variable(self, attr_names):
+        if isinstance(attr_names, str):
+            attr_names = [attr_names]
+        for attr_name in attr_names:
+            if attr_name not in self.variables:
+                return False
+        return True
 
     def train(self, data, single=False):
         if single:
@@ -75,8 +91,7 @@ class extendedDynamicBayesianNetwork():
         self.durations = {}
         groups = self.log.groupby(["Activity_Prev0", "Activity"])
         for group in groups:
-            self.durations[group[0]] =  KernelDensity(kernel='gaussian', bandwidth=0.2, rtol=1E-2).fit(group[1]["duration_0"].values[:, np.newaxis])
-
+            self.durations[group[0]] = KernelDensity(kernel='gaussian', bandwidth=0.2, rtol=1E-2).fit(group[1]["duration_0"].values[:, np.newaxis])
 
     def calculate_scores_per_trace(self, data, accum_attr=None):
         """
@@ -207,6 +222,35 @@ class Variable:
         pass
 
 
+class Multiple_Parent_Variables(Variable):
+    def __init__(self, discrete_var):
+        self.attr_name = discrete_var.attr_name
+        self.discreate_var = discrete_var
+        self.fdt = []
+
+    def add_parent(self, var):
+        pass
+
+    # Update this: under the discrete var class
+    def add_mapping(self, parent_names):
+        # Concatenate all parents
+        concatenated_functional_parents = '=split='.join(parent for parent in parent_names)
+
+        # Create a new discrete variable with concatenated functional parents
+        concatenated_discrete_variable = Discrete_Variable(concatenated_functional_parents, 0, 0, 0)
+
+        # Append concatenated functional parents into parent list of the variable
+        self.discreate_var.add_mapping(concatenated_discrete_variable)
+
+    # Train
+    def train(self, log):
+        pass
+
+    # Test
+    def test(self, row):
+        pass
+
+
 class Discrete_Variable(Variable):
     def __init__(self, attr_name, new_values, num_attrs, empty_val):
         self.attr_name = attr_name
@@ -220,6 +264,7 @@ class Discrete_Variable(Variable):
         self.conditional_parents = []
         self.cpt = dict()
         self.functional_parents = []
+        self.multiple_functional_parents = []
         self.fdt = []
         self.fdt_violation = []
 
@@ -232,7 +277,6 @@ class Discrete_Variable(Variable):
     def add_mapping(self, var):
         self.functional_parents.append(var)
         self.fdt.append({})
-
 
     ###
     # Training
@@ -256,26 +300,43 @@ class Discrete_Variable(Variable):
         self.values = set(log[self.attr_name].unique())
 
     def train_fdt(self, log):
+        """
+        functional dependency table
+        :param log:
+        :return:
+        """
         if len(self.functional_parents) == 0:
             return
 
         for i in range(len(self.functional_parents)):
             violations = 0
             log_size = log.shape[0]
-            parent = self.functional_parents[i]
-            grouped = log.groupby([parent.attr_name, self.attr_name]).size().reset_index(name='counts')
+            parents = self.functional_parents[i]
+
+            # A functional dependency may have multiple parents e.g a,b -> c in this case c has two parent for this FD
+            attr_names = re.split('=split=', parents.attr_name)
+            attr_names.append(self.attr_name)
+
+            grouped = log.groupby(attr_names).size().reset_index(name='counts')
+            # Merge All Parent Values (i.e merge all attributes except the last two because the last one indicates the
+            # counts and the previous one indicates child attribute in an FD.
+
             tmp_mapping = {}
             for t in grouped.itertuples():
                 row = list(t)
-                parent_val = row[1]
-                val = row[2]
+
+                # Concatenate all parent values into a string a,b -> c will be converted to 'a-b' for its parent value
+                parent_values = row[1:-2]
+                parent_val = '-'.join(str(x) for x in parent_values)
+                val = row[-2]
+
                 if parent_val not in tmp_mapping:
                     tmp_mapping[parent_val] = (row[-1], val)
                 elif row[-1] > tmp_mapping[parent_val][0]:
-                    violations += tmp_mapping[parent_val][0] # Add previous number to violations
+                    violations += tmp_mapping[parent_val][0]  # Add previous number to violations
                     tmp_mapping[parent_val] = (row[-1], val)
                 else:
-                    violations += row[-1] # Add number to violations
+                    violations += row[-1]  # Add number to violations
 
             for p in tmp_mapping:
                 self.fdt[i][p] = tmp_mapping[p][1]
@@ -298,7 +359,6 @@ class Discrete_Variable(Variable):
                 self.cpt[parent] = dict()
             self.cpt[parent][t[0][-1]] = t[1] / div[parent]
 
-
     ###
     # Testing
     ###
@@ -315,11 +375,23 @@ class Discrete_Variable(Variable):
         if len(self.functional_parents) > 0:
             for i in range(len(self.functional_parents)):
                 parent = self.functional_parents[i]
-                if getattr(row, parent.attr_name) not in self.fdt[i]:
+
+                if '=split=' in parent.attr_name:
+                    a = 5
+                # Split multiple parent attribute names
+                parent_attr_names = re.split('=split=', parent.attr_name)
+
+                # Find the values of each parent attribute from the row
+                parent_values = [str(getattr(row, parent_attr_name)) for parent_attr_name in parent_attr_names]
+
+                # Aggregate found values
+                parent_val = '-'.join(str(x) for x in parent_values)
+
+                if parent_val not in self.fdt[i]:
                     scores[parent.attr_name] = 1 - self.fdt_violation[i]
-                    self.fdt[i][getattr(row, parent.attr_name)] = getattr(row, self.attr_name)
+                    self.fdt[i][parent_val] = getattr(row, self.attr_name)
                     self.values.add(getattr(row, self.attr_name))
-                elif self.fdt[i][getattr(row, parent.attr_name)] == getattr(row, self.attr_name) or getattr(row, parent.attr_name) == 0:
+                elif self.fdt[i][parent_val] == getattr(row, self.attr_name) or parent_val == '0':  # 0 for nones
                     scores[parent.attr_name] = 1 - self.fdt_violation[i]
                 else:
                     scores[parent.attr_name] = self.fdt_violation[i]
@@ -347,7 +419,6 @@ class Discrete_Variable(Variable):
             return self.new_values
         else:
             return 1 - self.new_values
-
 
 
 class Continuous_Variable(Variable):
@@ -492,8 +563,6 @@ class Continuous_Variable(Variable):
         else:
             #return np.power(np.e, self.total_kernel.score_samples([[val]])[0])
             return self.total_kernel.score_samples([[val]])[0]
-
-
 
     def test_continuous(self, row):
         if len(self.continuous_parents) == 0:

@@ -100,7 +100,7 @@ class BayesNet(object):
         Allows BayesNet objects to be used
         as keys in a dictionary (i.e. hashable)
         """
-        return hash((str(self.V),str(self.E)))
+        return hash((str(self.V), str(self.E)))
 
     def copy(self):
         V = deepcopy(self.V)

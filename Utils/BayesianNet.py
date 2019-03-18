@@ -70,8 +70,6 @@ class BayesianNetwork:
 
             iteration += 1
 
-
-
     #####
     ### Functions needed when building a network using constraints (dependency)
     def independence_test(self, attr1, attr2, conditioned):
@@ -100,7 +98,7 @@ if __name__ == "__main__":
 
     blacklist = [['pIP', 'pType']]
 
-    bn = BayesianNetwork(data.iloc[range(10000),:])
+    bn = BayesianNetwork(data.iloc[range(10000), :])
     #bn.grow_shrink_pybn()
     bn.hill_climbing_pybn()
 

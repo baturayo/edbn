@@ -86,6 +86,7 @@ def model_score(data, bn):
                     total_score += count * math.log(count / num_rows)
             bn.F[node]["qi"] = 1
         else:
+
             # Create dataframe with only parents of node and convert to string
             str_data = data.values[:, [data.columns.get_loc(p) for p in parents]].astype('str')
             # Iterate over all rows and add row number to dict-entry of parent-values
@@ -182,15 +183,15 @@ class hill_climbing:
 
         # INITIALIZE NETWORK W/ NO EDGES
         # maintain children and parents dict for fast lookups
-        self.c_dict = dict([(n,[]) for n in self.nodes])
-        self.p_dict = dict([(n,[]) for n in self.nodes])
+        self.c_dict = dict([(n, []) for n in self.nodes])
+        self.p_dict = dict([(n, []) for n in self.nodes])
 
         self.restriction = restriction
         self.whitelist = whitelist
 
         if whitelist is None:
             whitelist = []
-        for (u,v) in whitelist:
+        for (u, v) in whitelist:
             if u in self.c_dict:
                 self.c_dict[u].append(v)
             if v in self.p_dict:

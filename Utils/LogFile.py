@@ -7,8 +7,8 @@ import numpy as np
 import copy
 
 class LogFile:
-
-    def __init__(self, filename, delim, header, rows, time_attr, trace_attr, activity_attr = None, values = None, integer_input = False, convert = True):
+    def __init__(self, filename, delim, header, rows, time_attr, trace_attr, activity_attr = None, values = None,
+                 integer_input = False, convert = True):
         self.filename = filename
         self.time = time_attr
         self.trace = trace_attr
@@ -90,7 +90,6 @@ class LogFile:
 
     def convert_int2string(self, column, int_val):
         return self.values[column][int_val - 1]
-
 
     def attributes(self):
         return self.data.columns

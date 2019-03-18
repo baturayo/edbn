@@ -1,5 +1,7 @@
 from Utils import Uncertainty_Coefficient as uc, BayesianNet as bn
+from Utils import TANE
 from eDBN.extended_Dynamic_Bayesian_Network import extendedDynamicBayesianNetwork
+from Utils.LogFile import LogFile
 
 
 def generate_model(data, remove_attrs = []):
@@ -52,16 +54,25 @@ def generate_model(data, remove_attrs = []):
 
             cbn.get_variable("duration_%i" % (i)).add_parent(cbn.get_variable(data.activity + "_Prev%i" % (i)))
             prev = ""
+
             if i + 1 < data.k:
                 prev = "_Prev%i" % (i+1)
             cbn.get_variable("duration_%i" % (i)).add_parent(cbn.get_variable(data.activity + prev))
 
-
     print("GENERATE: calculate mappings")
-
-    # Calculate Mappings
+    # Calculate Mappings (UPDATE HERE)
+    mappings, multi_parent_fds = TANE.run_tane(data.contextdata, data.contextdata.shape[0], 4, data.contextdata.shape[1], 0.01)
     mappings = uc.calculate_mappings(data.contextdata, attributes, data.k, 0.99)
 
+    # Add multi parent FDs
+    for fd in multi_parent_fds:
+        fd_parent = fd[0]
+        fd_child = fd[1]
+        if cbn.check_variable(fd_parent) and cbn.check_variable(fd_child):
+            print(str(fd_parent) + '=>' + str(fd_child))
+            cbn.add_multiple_parents_variable(fd_parent, fd_child)
+
+    # Print NODES to check whether it is added
     tmp_mappings = mappings[:]
     print("GENERATE: removing redundant mappings")
     ignore_nodes = []
@@ -85,10 +96,12 @@ def generate_model(data, remove_attrs = []):
     whitelist = []
     print("MAPPINGS:")
     for mapping in mappings:
-        cbn.get_variable(mapping[1]).add_mapping(cbn.get_variable(mapping[0]))
-        print(mapping[0], "=>", mapping[1])
-        if (mapping[0], mapping[1]) in tmp_mappings:
-            whitelist.append((mapping[0], mapping[1]))
+        # Check if mapping contains multiple parents and either child or parent should be a variable
+        if '=split=' not in mapping[0] and cbn.check_variable(mapping[0]) and cbn.check_variable(mapping[1]):
+            cbn.get_variable(mapping[1]).add_mapping(cbn.get_variable(mapping[0]))
+            print(mapping[0], "=>", mapping[1])
+            if (mapping[0], mapping[1]) in tmp_mappings:
+                whitelist.append((mapping[0], mapping[1]))
 
     # Create list with allowed edges (only from previous -> current and current -> current)
     restrictions = []
@@ -118,7 +131,7 @@ def generate_model(data, remove_attrs = []):
     return cbn
 
 
-def get_max_cycle(relations, nodes = None, closure = None):
+def get_max_cycle(relations, nodes=None, closure=None):
     """
     Given a list of tuples, return the maximum cycle found in the list
 
@@ -150,3 +163,4 @@ def get_max_cycle(relations, nodes = None, closure = None):
             if len(found_closure) > len(max_closure):
                 max_closure = found_closure
     return max_closure
+
