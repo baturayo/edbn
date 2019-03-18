@@ -77,6 +77,13 @@ class extendedDynamicBayesianNetwork():
                 return False
         return True
 
+    @ staticmethod
+    def check_fd(attr_name):
+        if '_Prev' in attr_name:
+            return False
+        else:
+            return True
+
     def train(self, data, single=False):
         if single:
             self.log = data

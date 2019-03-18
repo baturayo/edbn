@@ -80,6 +80,7 @@ def run_full():
     plot.plot_compare_roc_curve(out_files, labels, "BPIC15 Comparison")
     plot.plot_compare_prec_recall_curve(out_files, labels, "BPIC15 Comparison")
 
+
 if __name__ == "__main__":
     #run_reduced()
     run_full()

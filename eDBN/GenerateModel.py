@@ -61,14 +61,19 @@ def generate_model(data, remove_attrs = []):
 
     print("GENERATE: calculate mappings")
     # Calculate Mappings (UPDATE HERE)
-    mappings, multi_parent_fds = TANE.run_tane(data.contextdata, data.contextdata.shape[0], 4, data.contextdata.shape[1], 0.01)
+    mappings, multi_parent_fds = TANE.run_tane(data.contextdata,
+                                               data.contextdata.shape[0],
+                                               3,
+                                               attributes,
+                                               0.001,
+                                               'taneg3')
     mappings = uc.calculate_mappings(data.contextdata, attributes, data.k, 0.99)
 
     # Add multi parent FDs
     for fd in multi_parent_fds:
         fd_parent = fd[0]
         fd_child = fd[1]
-        if cbn.check_variable(fd_parent) and cbn.check_variable(fd_child):
+        if cbn.check_variable(fd_parent) and cbn.check_variable(fd_child) and cbn.check_fd(fd_child):
             print(str(fd_parent) + '=>' + str(fd_child))
             cbn.add_multiple_parents_variable(fd_parent, fd_child)
 

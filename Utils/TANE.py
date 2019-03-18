@@ -8,7 +8,7 @@ def write_sample_data(data, sample_size):
     :param data: Pandas DF object
     :param sample_size: Number of rows to take the sample
     """
-    sample_data = data.sample(sample_size)
+    sample_data = data.head(sample_size)
     sample_data.to_csv('../tane-1.0/original/sample.orig', sep=',', header=False, index=False)
 
 
@@ -69,17 +69,48 @@ def map_attributes(attribute_names):
     return attribute_mappings
 
 
-def run_tane(data, sample_size, n_levels, n_attributes, threshold):
+def filter_out_attributes(data, curr_attributes):
+    """
+    Filter out unused columns from the dataframe
+    :param curr_attributes: Current used attributes in variables
+    :return: Filtered data frame
+    curr_attributes
+    """
+    prev_attributes = [attr + '_Prev0' for attr in curr_attributes]
+    all_attributes = prev_attributes + curr_attributes
+    n_attributes = len(all_attributes)
+    return data[all_attributes], n_attributes
+
+
+def run_tane(data, sample_size, n_levels, attributes, threshold, algorithm):
+    data, n_attributes = filter_out_attributes(data, attributes)
     write_sample_data(data, sample_size)
     write_dat_file()
     dat_file_path = '../tane-1.0/data/data.dat'
     fd_raw_output_path = '../tane-1.0/output/sample.log'
-    command_tane = '../tane-1.0/bin/taneg3 {} {} {} {} {}&> {}'.format(str(n_levels),
-                                                                       str(sample_size),
-                                                                       str(n_attributes),
-                                                                       dat_file_path,
-                                                                       str(threshold),
-                                                                       fd_raw_output_path)
+
+    if algorithm == 'taneg3':
+        command_tane = '../tane-1.0/bin/taneg3 {} {} {} {} {}&> {}'.format(str(n_levels),
+                                                                           str(sample_size),
+                                                                           str(n_attributes),
+                                                                           dat_file_path,
+                                                                           str(threshold),
+                                                                           fd_raw_output_path)
+    elif algorithm == 'tanemem':
+        command_tane = '../tane-1.0/bin/tanemem {} {} {} {}&> {}'.format(str(n_levels),
+                                                                         str(sample_size),
+                                                                         str(n_attributes),
+                                                                         dat_file_path,
+                                                                         fd_raw_output_path)
+    elif algorithm == 'tane':
+        command_tane = '../tane-1.0/bin/tane {} {} {} {}&> {}'.format(str(n_levels),
+                                                                         str(sample_size),
+                                                                         str(n_attributes),
+                                                                         dat_file_path,
+                                                                         fd_raw_output_path)
+    else:
+        raise Exception('{} is not defined. The algorithm can be either taneg3, tanemem or tane'.format(str(algorithm)))
+
     print(command_tane)
     os.system(command_tane)
     attribute_mapping = map_attributes(data.columns)

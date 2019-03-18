@@ -40,7 +40,7 @@ def preprocess(data, case_attr, activity_attr, time_attr):
 #            for i in range(len(trace_data) - 1):
 #                activity_configurations.add(trace_data.loc[trace_data.index[i], "Activity"] + "-" + trace_data.loc[trace_data.index[i+1], "Activity"])
 
-            if random.randint(1,100) > 50: # No anomaly injection with 50% chance
+            if random.randint(1, 100) > 50: # No anomaly injection with 50% chance
                 trace_data["Anomaly"] = "0"
                 test_traces.append(trace_data)
             else:
