@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 
+
 def write_sample_data(data, sample_size):
     """
     Take a sample data from the train set to mine FDs
@@ -89,35 +90,36 @@ def run_tane(data, sample_size, n_levels, attributes, threshold, algorithm):
     data, n_attributes = filter_out_attributes(data, attributes)
     write_sample_data(data, sample_size)
     write_dat_file()
-    dat_file_path = '../tane-1.0/data/data.dat'
-    fd_raw_output_path = '../tane-1.0/output/sample.log'
-
-    if algorithm == 'taneg3':
-        command_tane = '../tane-1.0/bin/taneg3 {} {} {} {} {}&> {}'.format(str(n_levels),
-                                                                           str(sample_size),
-                                                                           str(n_attributes),
-                                                                           dat_file_path,
-                                                                           str(threshold),
-                                                                           fd_raw_output_path)
-    elif algorithm == 'tanemem':
-        command_tane = '../tane-1.0/bin/tanemem {} {} {} {}&> {}'.format(str(n_levels),
-                                                                         str(sample_size),
-                                                                         str(n_attributes),
-                                                                         dat_file_path,
-                                                                         fd_raw_output_path)
-    elif algorithm == 'tane':
-        command_tane = '../tane-1.0/bin/tane {} {} {} {}&> {}'.format(str(n_levels),
-                                                                         str(sample_size),
-                                                                         str(n_attributes),
-                                                                         dat_file_path,
-                                                                         fd_raw_output_path)
-    else:
-        raise Exception('{} is not defined. The algorithm can be either taneg3, tanemem or tane'.format(str(algorithm)))
-
-    print(command_tane)
-    p = subprocess.Popen(command_tane, shell=True,
-                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
-    # allow external program to work
-    p.wait()
-    attribute_mapping = map_attributes(attributes)
-    return import_fds(attribute_mapping)
+    # dat_file_path = '../tane-1.0/data/data.dat'
+    # fd_raw_output_path = '../tane-1.0/output/sample.log'
+    #
+    # if algorithm == 'taneg3':
+    #     command_tane = '../tane-1.0/bin/taneg3 {} {} {} {} {}&> {}'.format(str(n_levels),
+    #                                                                        str(sample_size),
+    #                                                                        str(n_attributes),
+    #                                                                        dat_file_path,
+    #                                                                        str(threshold),
+    #                                                                        fd_raw_output_path)
+    # elif algorithm == 'tanemem':
+    #     command_tane = '../tane-1.0/bin/tanemem {} {} {} {}&> {}'.format(str(n_levels),
+    #                                                                      str(sample_size),
+    #                                                                      str(n_attributes),
+    #                                                                      dat_file_path,
+    #                                                                      fd_raw_output_path)
+    # elif algorithm == 'tane':
+    #     command_tane = '../tane-1.0/bin/tane {} {} {} {}&> {}'.format(str(n_levels),
+    #                                                                      str(sample_size),
+    #                                                                      str(n_attributes),
+    #                                                                      dat_file_path,
+    #                                                                      fd_raw_output_path)
+    # else:
+    #     raise Exception('{} is not defined. The algorithm can be either taneg3, tanemem or tane'.format(str(algorithm)))
+    #
+    # print(command_tane)
+    # p = subprocess.Popen(command_tane, shell=True,
+    #                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
+    # # allow external program to work
+    # p.wait()
+    # attribute_mapping = map_attributes(attributes)
+    # return import_fds(attribute_mapping)
+    return 0
