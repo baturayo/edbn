@@ -125,6 +125,9 @@ venv.bak/
 # Data
 Data/
 
+# FD Algos
+tane-1.0/
+
 # Spyder project settings
 .spyderproject
 .spyproject
