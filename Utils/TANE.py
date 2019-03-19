@@ -1,6 +1,6 @@
 import os
 import re
-
+import subprocess as subp
 
 def write_sample_data(data, sample_size):
     """
@@ -21,7 +21,7 @@ def write_dat_file():
     command2 = '../bin/select.perl ../descriptions/data.dsc'
     command = command1 + '&&' + command2
     print(command)
-    os.system(command)
+    subp.check_call(command, shell=True)
 
 
 def import_fds(attribute_mappings):
@@ -112,24 +112,6 @@ def run_tane(data, sample_size, n_levels, attributes, threshold, algorithm):
         raise Exception('{} is not defined. The algorithm can be either taneg3, tanemem or tane'.format(str(algorithm)))
 
     print(command_tane)
-    os.system(command_tane)
-    attribute_mapping = map_attributes(data.columns)
+    subp.check_call(command_tane, shell=True)
+    attribute_mapping = map_attributes(attributes)
     return import_fds(attribute_mapping)
-
-
-# attrs = ['Case_ID', 'Activity', 'Resource', 'Complete_Timestamp',
-#        'case_IDofConceptCase', 'case_Includes_subCases',
-#        'case_Responsible_actor', 'case_SUMleges', 'case_caseProcedure',
-#        'case_caseStatus', 'case_case_type', 'case_landRegisterID',
-#        'case_last_phase', 'case_parts', 'case_requestComplete',
-#        'case_termName', 'action_code', 'activityNameEN', 'activityNameNL',
-#        'concept_name', 'dateStop', 'lifecycle_transition',
-#        'monitoringResource', 'question', 'Weekday']
-#
-# attribute_mappings = map_attributes(attrs)
-# structured_fds = import_fds(attribute_mappings)
-# print(structured_fds)
-
-
-
-
