@@ -1,3 +1,4 @@
+#./venv/bin/python3.6
 #matplotlib.use("Agg")  # Disable comment when no output should be shown (for running on servers without graphical interface)
 
 import datetime
