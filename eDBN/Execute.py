@@ -1,8 +1,6 @@
 import eDBN.GenerateModel as gm
 import matplotlib.pyplot as plt
 
-from Result import Trace_result
-
 def train(data):
     cbn = gm.generate_model(data)
     cbn.train(data)
