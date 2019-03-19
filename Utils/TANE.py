@@ -1,6 +1,6 @@
 import os
 import re
-import subprocess as subp
+import subprocess
 
 def write_sample_data(data, sample_size):
     """
@@ -21,7 +21,10 @@ def write_dat_file():
     command2 = '../bin/select.perl ../descriptions/data.dsc'
     command = command1 + '&&' + command2
     print(command)
-    subp.check_call(command, shell=True)
+    p = subprocess.Popen(command, shell=True,
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
+    # allow external program to work
+    p.wait()
 
 
 def import_fds(attribute_mappings):
@@ -112,6 +115,9 @@ def run_tane(data, sample_size, n_levels, attributes, threshold, algorithm):
         raise Exception('{} is not defined. The algorithm can be either taneg3, tanemem or tane'.format(str(algorithm)))
 
     print(command_tane)
-    subp.check_call(command_tane, shell=True)
+    p = subprocess.Popen(command_tane, shell=True,
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
+    # allow external program to work
+    p.wait()
     attribute_mapping = map_attributes(attributes)
     return import_fds(attribute_mapping)
