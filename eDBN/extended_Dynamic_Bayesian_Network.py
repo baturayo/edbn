@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator
-import Result
+from Utils import Result
 
 
 def calculate(trace):
