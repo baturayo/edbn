@@ -92,7 +92,7 @@ def run_tane(data, sample_size, n_levels, attributes, threshold, algorithm):
     if algorithm == 'taneg3':
         command_tane = '../tane-1.0/bin/taneg3 {} {} {} {} {}&> {}'.format(str(n_levels),
                                                                            str(sample_size),
-                                                                           str(10),#tr(n_attributes),
+                                                                           str(n_attributes),
                                                                            dat_file_path,
                                                                            str(threshold),
                                                                            fd_raw_output_path)
